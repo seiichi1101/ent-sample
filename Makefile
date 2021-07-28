@@ -1,6 +1,6 @@
 .PHONY: gremlin
 gremlin:
-	@docker-compose up graph
+	@docker-compose up --build graph
 console:
 	@docker-compose run --rm console
 gen:

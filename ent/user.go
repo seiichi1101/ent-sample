@@ -11,9 +11,11 @@ import (
 
 // User is the model entity for the User schema.
 type User struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 }
 
 // FromResponse scans the gremlin response data into User.
@@ -23,12 +25,14 @@ func (u *User) FromResponse(res *gremlin.Response) error {
 		return err
 	}
 	var scanu struct {
-		ID int `json:"id,omitempty"`
+		ID   string `json:"id,omitempty"`
+		Name string `json:"name,omitempty"`
 	}
 	if err := vmap.Decode(&scanu); err != nil {
 		return err
 	}
 	u.ID = scanu.ID
+	u.Name = scanu.Name
 	return nil
 }
 
@@ -55,6 +59,8 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v", u.ID))
+	builder.WriteString(", name=")
+	builder.WriteString(u.Name)
 	builder.WriteByte(')')
 	return builder.String()
 }
@@ -69,14 +75,16 @@ func (u *Users) FromResponse(res *gremlin.Response) error {
 		return err
 	}
 	var scanu []struct {
-		ID int `json:"id,omitempty"`
+		ID   string `json:"id,omitempty"`
+		Name string `json:"name,omitempty"`
 	}
 	if err := vmap.Decode(&scanu); err != nil {
 		return err
 	}
 	for _, v := range scanu {
 		*u = append(*u, &User{
-			ID: v.ID,
+			ID:   v.ID,
+			Name: v.Name,
 		})
 	}
 	return nil

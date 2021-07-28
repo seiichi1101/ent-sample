@@ -26,6 +26,12 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
+// SetName sets the "name" field.
+func (uu *UserUpdate) SetName(s string) *UserUpdate {
+	uu.mutation.SetName(s)
+	return uu
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -38,12 +44,18 @@ func (uu *UserUpdate) Save(ctx context.Context) (int, error) {
 		affected int
 	)
 	if len(uu.hooks) == 0 {
+		if err = uu.check(); err != nil {
+			return 0, err
+		}
 		affected, err = uu.gremlinSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*UserMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = uu.check(); err != nil {
+				return 0, err
 			}
 			uu.mutation = mutation
 			affected, err = uu.gremlinSave(ctx)
@@ -82,6 +94,16 @@ func (uu *UserUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (uu *UserUpdate) check() error {
+	if v, ok := uu.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (uu *UserUpdate) gremlinSave(ctx context.Context) (int, error) {
 	res := &gremlin.Response{}
 	query, bindings := uu.gremlin().Query()
@@ -102,6 +124,9 @@ func (uu *UserUpdate) gremlin() *dsl.Traversal {
 	var (
 		trs []*dsl.Traversal
 	)
+	if value, ok := uu.mutation.Name(); ok {
+		v.Property(dsl.Single, user.FieldName, value)
+	}
 	v.Count()
 	trs = append(trs, v)
 	return dsl.Join(trs...)
@@ -113,6 +138,12 @@ type UserUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *UserMutation
+}
+
+// SetName sets the "name" field.
+func (uuo *UserUpdateOne) SetName(s string) *UserUpdateOne {
+	uuo.mutation.SetName(s)
+	return uuo
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -134,12 +165,18 @@ func (uuo *UserUpdateOne) Save(ctx context.Context) (*User, error) {
 		node *User
 	)
 	if len(uuo.hooks) == 0 {
+		if err = uuo.check(); err != nil {
+			return nil, err
+		}
 		node, err = uuo.gremlinSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*UserMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = uuo.check(); err != nil {
+				return nil, err
 			}
 			uuo.mutation = mutation
 			node, err = uuo.gremlinSave(ctx)
@@ -178,6 +215,16 @@ func (uuo *UserUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (uuo *UserUpdateOne) check() error {
+	if v, ok := uuo.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (uuo *UserUpdateOne) gremlinSave(ctx context.Context) (*User, error) {
 	res := &gremlin.Response{}
 	id, ok := uuo.mutation.ID()
@@ -198,11 +245,14 @@ func (uuo *UserUpdateOne) gremlinSave(ctx context.Context) (*User, error) {
 	return u, nil
 }
 
-func (uuo *UserUpdateOne) gremlin(id int) *dsl.Traversal {
+func (uuo *UserUpdateOne) gremlin(id string) *dsl.Traversal {
 	v := g.V(id)
 	var (
 		trs []*dsl.Traversal
 	)
+	if value, ok := uuo.mutation.Name(); ok {
+		v.Property(dsl.Single, user.FieldName, value)
+	}
 	if len(uuo.fields) > 0 {
 		fields := make([]interface{}, 0, len(uuo.fields)+1)
 		fields = append(fields, true)

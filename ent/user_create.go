@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"ent-sample/ent/user"
+	"errors"
 	"fmt"
 
 	"entgo.io/ent/dialect/gremlin"
@@ -17,6 +18,12 @@ type UserCreate struct {
 	config
 	mutation *UserMutation
 	hooks    []Hook
+}
+
+// SetName sets the "name" field.
+func (uc *UserCreate) SetName(s string) *UserCreate {
+	uc.mutation.SetName(s)
+	return uc
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -70,6 +77,14 @@ func (uc *UserCreate) SaveX(ctx context.Context) *User {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
+	if _, ok := uc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
+	}
+	if v, ok := uc.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+		}
+	}
 	return nil
 }
 
@@ -91,6 +106,9 @@ func (uc *UserCreate) gremlinSave(ctx context.Context) (*User, error) {
 
 func (uc *UserCreate) gremlin() *dsl.Traversal {
 	v := g.AddV(user.Label)
+	if value, ok := uc.mutation.Name(); ok {
+		v.Property(dsl.Single, user.FieldName, value)
+	}
 	return v.ValueMap(true)
 }
 

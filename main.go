@@ -18,10 +18,17 @@ func main() {
 
 	ctx := context.Background()
 
-	user, err := client.User.Create().Save(ctx)
+	user1, err := client.User.Create().SetName("alice").Save(ctx)
 	if err != nil {
 		log.Fatalf(err.Error())
-	} else {
-		log.Println("created user: ", user)
+	}
+	user2, err := client.User.Create().SetName("bob").Save(ctx)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	_, err = client.User.UpdateOne(user1).AddFriend(user2).Save(ctx)
+	if err != nil {
+		log.Fatalf(err.Error())
 	}
 }
