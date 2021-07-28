@@ -27,18 +27,14 @@ func (uc *UserCreate) SetName(s string) *UserCreate {
 }
 
 // AddFriendIDs adds the "friend" edge to the User entity by IDs.
-func (uc *UserCreate) AddFriendIDs(ids ...string) *UserCreate {
-	uc.mutation.AddFriendIDs(ids...)
+func (uc *UserCreate) AddFriendID(id string, updatedAt string) *UserCreate {
+	uc.mutation.AddFriendID(id, updatedAt)
 	return uc
 }
 
 // AddFriend adds the "friend" edges to the User entity.
-func (uc *UserCreate) AddFriend(u ...*User) *UserCreate {
-	ids := make([]string, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uc.AddFriendIDs(ids...)
+func (uc *UserCreate) AddFriend(u *User, updatedAt string) *UserCreate {
+	return uc.AddFriendID(u.ID, updatedAt)
 }
 
 // Mutation returns the UserMutation object of the builder.

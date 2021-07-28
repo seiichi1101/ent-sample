@@ -13,6 +13,8 @@ const (
 	EdgeFriend = "friend"
 	// FriendLabel holds the string label denoting the friend edge type in the database.
 	FriendLabel = "user_friend"
+
+	EdgeFriendUpdatedAt = "updated_at"
 )
 
 var (

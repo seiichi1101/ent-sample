@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	_, err = client.User.UpdateOne(user1).AddFriend(user2).Save(ctx)
+	_, err = client.User.UpdateOne(user1).AddFriend(user2, "20210728").Save(ctx)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

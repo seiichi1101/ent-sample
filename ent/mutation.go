@@ -32,7 +32,9 @@ type UserMutation struct {
 	id            *string
 	name          *string
 	clearedFields map[string]struct{}
-	friend        map[string]struct{}
+	friend        map[string]struct {
+		updatedAt *string
+	}
 	removedfriend map[string]struct{}
 	clearedfriend bool
 	done          bool
@@ -133,6 +135,14 @@ func (m *UserMutation) Name() (r string, exists bool) {
 	return *v, true
 }
 
+func (m *UserMutation) UpdatedAt(id string) (r string, exists bool) {
+	v := m.friend[id].updatedAt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // OldName returns the old "name" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
@@ -156,12 +166,21 @@ func (m *UserMutation) ResetName() {
 }
 
 // AddFriendIDs adds the "friend" edge to the User entity by ids.
-func (m *UserMutation) AddFriendIDs(ids ...string) {
+// func (m *UserMutation) AddFriendIDs(ids ...string) {
+// 	if m.friend == nil {
+// 		m.friend = make(map[string]struct{})
+// 	}
+// 	for i := range ids {
+// 		m.friend[ids[i]] = struct{}{}
+// 	}
+// }
+
+func (m *UserMutation) AddFriendID(id, updateAt string) {
 	if m.friend == nil {
-		m.friend = make(map[string]struct{})
+		m.friend = make(map[string]struct{ updatedAt *string })
 	}
-	for i := range ids {
-		m.friend[ids[i]] = struct{}{}
+	m.friend[id] = struct{ updatedAt *string }{
+		updatedAt: &updateAt,
 	}
 }
 

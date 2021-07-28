@@ -34,19 +34,21 @@ func (uu *UserUpdate) SetName(s string) *UserUpdate {
 }
 
 // AddFriendIDs adds the "friend" edge to the User entity by IDs.
-func (uu *UserUpdate) AddFriendIDs(ids ...string) *UserUpdate {
-	uu.mutation.AddFriendIDs(ids...)
+func (uu *UserUpdate) AddFriendID(id, updatedAt string) *UserUpdate {
+	uu.mutation.AddFriendID(id, updatedAt)
 	return uu
 }
 
 // AddFriend adds the "friend" edges to the User entity.
-func (uu *UserUpdate) AddFriend(u ...*User) *UserUpdate {
-	ids := make([]string, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uu.AddFriendIDs(ids...)
+func (uu *UserUpdate) AddFriend(u *User, updatedAt string) *UserUpdate {
+	return uu.AddFriendID(u.ID, updatedAt)
 }
+
+// // AddFriend adds the "friend" edges to the User entity.
+// func (uuo *UserUpdateOne) AddFriendWithProperty(u *User, updatedAt string) *UserUpdateOne {
+// 	uuo.mutation.AddFriendWithProperty(u.ID, updatedAt)
+// 	return uuo
+// }
 
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
@@ -194,18 +196,14 @@ func (uuo *UserUpdateOne) SetName(s string) *UserUpdateOne {
 }
 
 // AddFriendIDs adds the "friend" edge to the User entity by IDs.
-func (uuo *UserUpdateOne) AddFriendIDs(ids ...string) *UserUpdateOne {
-	uuo.mutation.AddFriendIDs(ids...)
+func (uuo *UserUpdateOne) AddFriendID(id, updatedAt string) *UserUpdateOne {
+	uuo.mutation.AddFriendID(id, updatedAt)
 	return uuo
 }
 
 // AddFriend adds the "friend" edges to the User entity.
-func (uuo *UserUpdateOne) AddFriend(u ...*User) *UserUpdateOne {
-	ids := make([]string, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uuo.AddFriendIDs(ids...)
+func (uuo *UserUpdateOne) AddFriend(u *User, updatedAt string) *UserUpdateOne {
+	return uuo.AddFriendID(u.ID, updatedAt)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -344,7 +342,9 @@ func (uuo *UserUpdateOne) gremlin(id string) *dsl.Traversal {
 		trs = append(trs, tr)
 	}
 	for _, id := range uuo.mutation.FriendIDs() {
-		v.AddE(user.FriendLabel).To(g.V(id)).OutV()
+		if value, ok := uuo.mutation.UpdatedAt(id); ok {
+			v.AddE(user.FriendLabel).Property(dsl.Single, user.EdgeFriendUpdatedAt, value).To(g.V(id)).OutV()
+		}
 	}
 	if len(uuo.fields) > 0 {
 		fields := make([]interface{}, 0, len(uuo.fields)+1)
