@@ -12,6 +12,8 @@ import (
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/gremlin"
+	"entgo.io/ent/dialect/gremlin/graph/dsl"
+	"entgo.io/ent/dialect/gremlin/graph/dsl/g"
 )
 
 // Client is the client that holds all ent builders.
@@ -190,6 +192,17 @@ func (c *UserClient) GetX(ctx context.Context, id string) *User {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryFriend queries the friend edge of a User.
+func (c *UserClient) QueryFriend(u *User) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *dsl.Traversal, _ error) {
+
+		fromV = g.V(u.ID).Both(user.FriendLabel)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/gremlin"
 	"entgo.io/ent/dialect/gremlin/graph/dsl"
+	"entgo.io/ent/dialect/gremlin/graph/dsl/__"
 	"entgo.io/ent/dialect/gremlin/graph/dsl/g"
 )
 
@@ -32,9 +33,45 @@ func (uu *UserUpdate) SetName(s string) *UserUpdate {
 	return uu
 }
 
+// AddFriendIDs adds the "friend" edge to the User entity by IDs.
+func (uu *UserUpdate) AddFriendIDs(ids ...string) *UserUpdate {
+	uu.mutation.AddFriendIDs(ids...)
+	return uu
+}
+
+// AddFriend adds the "friend" edges to the User entity.
+func (uu *UserUpdate) AddFriend(u ...*User) *UserUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uu.AddFriendIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearFriend clears all "friend" edges to the User entity.
+func (uu *UserUpdate) ClearFriend() *UserUpdate {
+	uu.mutation.ClearFriend()
+	return uu
+}
+
+// RemoveFriendIDs removes the "friend" edge to User entities by IDs.
+func (uu *UserUpdate) RemoveFriendIDs(ids ...string) *UserUpdate {
+	uu.mutation.RemoveFriendIDs(ids...)
+	return uu
+}
+
+// RemoveFriend removes "friend" edges to User entities.
+func (uu *UserUpdate) RemoveFriend(u ...*User) *UserUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uu.RemoveFriendIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -122,10 +159,20 @@ func (uu *UserUpdate) gremlin() *dsl.Traversal {
 		p(v)
 	}
 	var (
+		rv = v.Clone()
+		_  = rv
+
 		trs []*dsl.Traversal
 	)
 	if value, ok := uu.mutation.Name(); ok {
 		v.Property(dsl.Single, user.FieldName, value)
+	}
+	for _, id := range uu.mutation.RemovedFriendIDs() {
+		tr := rv.Clone().BothE(user.FriendLabel).Where(__.Or(__.InV().HasID(id), __.OutV().HasID(id))).Drop().Iterate()
+		trs = append(trs, tr)
+	}
+	for _, id := range uu.mutation.FriendIDs() {
+		v.AddE(user.FriendLabel).To(g.V(id)).OutV()
 	}
 	v.Count()
 	trs = append(trs, v)
@@ -146,9 +193,45 @@ func (uuo *UserUpdateOne) SetName(s string) *UserUpdateOne {
 	return uuo
 }
 
+// AddFriendIDs adds the "friend" edge to the User entity by IDs.
+func (uuo *UserUpdateOne) AddFriendIDs(ids ...string) *UserUpdateOne {
+	uuo.mutation.AddFriendIDs(ids...)
+	return uuo
+}
+
+// AddFriend adds the "friend" edges to the User entity.
+func (uuo *UserUpdateOne) AddFriend(u ...*User) *UserUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uuo.AddFriendIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearFriend clears all "friend" edges to the User entity.
+func (uuo *UserUpdateOne) ClearFriend() *UserUpdateOne {
+	uuo.mutation.ClearFriend()
+	return uuo
+}
+
+// RemoveFriendIDs removes the "friend" edge to User entities by IDs.
+func (uuo *UserUpdateOne) RemoveFriendIDs(ids ...string) *UserUpdateOne {
+	uuo.mutation.RemoveFriendIDs(ids...)
+	return uuo
+}
+
+// RemoveFriend removes "friend" edges to User entities.
+func (uuo *UserUpdateOne) RemoveFriend(u ...*User) *UserUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uuo.RemoveFriendIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -248,10 +331,20 @@ func (uuo *UserUpdateOne) gremlinSave(ctx context.Context) (*User, error) {
 func (uuo *UserUpdateOne) gremlin(id string) *dsl.Traversal {
 	v := g.V(id)
 	var (
+		rv = v.Clone()
+		_  = rv
+
 		trs []*dsl.Traversal
 	)
 	if value, ok := uuo.mutation.Name(); ok {
 		v.Property(dsl.Single, user.FieldName, value)
+	}
+	for _, id := range uuo.mutation.RemovedFriendIDs() {
+		tr := rv.Clone().BothE(user.FriendLabel).Where(__.Or(__.InV().HasID(id), __.OutV().HasID(id))).Drop().Iterate()
+		trs = append(trs, tr)
+	}
+	for _, id := range uuo.mutation.FriendIDs() {
+		v.AddE(user.FriendLabel).To(g.V(id)).OutV()
 	}
 	if len(uuo.fields) > 0 {
 		fields := make([]interface{}, 0, len(uuo.fields)+1)

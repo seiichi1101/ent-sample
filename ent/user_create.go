@@ -26,6 +26,21 @@ func (uc *UserCreate) SetName(s string) *UserCreate {
 	return uc
 }
 
+// AddFriendIDs adds the "friend" edge to the User entity by IDs.
+func (uc *UserCreate) AddFriendIDs(ids ...string) *UserCreate {
+	uc.mutation.AddFriendIDs(ids...)
+	return uc
+}
+
+// AddFriend adds the "friend" edges to the User entity.
+func (uc *UserCreate) AddFriend(u ...*User) *UserCreate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uc.AddFriendIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -108,6 +123,9 @@ func (uc *UserCreate) gremlin() *dsl.Traversal {
 	v := g.AddV(user.Label)
 	if value, ok := uc.mutation.Name(); ok {
 		v.Property(dsl.Single, user.FieldName, value)
+	}
+	for _, id := range uc.mutation.FriendIDs() {
+		v.AddE(user.FriendLabel).To(g.V(id)).OutV()
 	}
 	return v.ValueMap(true)
 }

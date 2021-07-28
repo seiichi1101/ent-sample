@@ -173,6 +173,30 @@ func NameHasSuffix(v string) predicate.User {
 	})
 }
 
+// HasFriend applies the HasEdge predicate on the "friend" edge.
+func HasFriend() predicate.User {
+	return predicate.User(func(t *dsl.Traversal) {
+		t.Both(FriendLabel)
+	})
+}
+
+// HasFriendWith applies the HasEdge predicate on the "friend" edge with a given conditions (other predicates).
+func HasFriendWith(preds ...predicate.User) predicate.User {
+	return predicate.User(func(t *dsl.Traversal) {
+		in, out := __.InV(), __.OutV()
+		for _, p := range preds {
+			p(in)
+			p(out)
+		}
+		t.Where(
+			__.Or(
+				__.OutE(FriendLabel).Where(in),
+				__.InE(FriendLabel).Where(out),
+			),
+		)
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(func(tr *dsl.Traversal) {

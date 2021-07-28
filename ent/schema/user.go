@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -21,7 +22,7 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		// edge.To("friend", User.Type).
+		edge.To("friend", User.Type),
 		// 	StorageKey(
 		// 	edge.Columns("user_id", "friend_id"),
 		// 	),

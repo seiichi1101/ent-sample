@@ -32,6 +32,9 @@ type UserMutation struct {
 	id            *string
 	name          *string
 	clearedFields map[string]struct{}
+	friend        map[string]struct{}
+	removedfriend map[string]struct{}
+	clearedfriend bool
 	done          bool
 	oldValue      func(context.Context) (*User, error)
 	predicates    []predicate.User
@@ -152,6 +155,59 @@ func (m *UserMutation) ResetName() {
 	m.name = nil
 }
 
+// AddFriendIDs adds the "friend" edge to the User entity by ids.
+func (m *UserMutation) AddFriendIDs(ids ...string) {
+	if m.friend == nil {
+		m.friend = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.friend[ids[i]] = struct{}{}
+	}
+}
+
+// ClearFriend clears the "friend" edge to the User entity.
+func (m *UserMutation) ClearFriend() {
+	m.clearedfriend = true
+}
+
+// FriendCleared reports if the "friend" edge to the User entity was cleared.
+func (m *UserMutation) FriendCleared() bool {
+	return m.clearedfriend
+}
+
+// RemoveFriendIDs removes the "friend" edge to the User entity by IDs.
+func (m *UserMutation) RemoveFriendIDs(ids ...string) {
+	if m.removedfriend == nil {
+		m.removedfriend = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.removedfriend[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedFriend returns the removed IDs of the "friend" edge to the User entity.
+func (m *UserMutation) RemovedFriendIDs() (ids []string) {
+	for id := range m.removedfriend {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// FriendIDs returns the "friend" edge IDs in the mutation.
+func (m *UserMutation) FriendIDs() (ids []string) {
+	for id := range m.friend {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetFriend resets all changes to the "friend" edge.
+func (m *UserMutation) ResetFriend() {
+	m.friend = nil
+	m.clearedfriend = false
+	m.removedfriend = nil
+}
+
 // Op returns the operation name.
 func (m *UserMutation) Op() Op {
 	return m.op
@@ -265,48 +321,84 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.friend != nil {
+		edges = append(edges, user.EdgeFriend)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case user.EdgeFriend:
+		ids := make([]ent.Value, 0, len(m.friend))
+		for id := range m.friend {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedfriend != nil {
+		edges = append(edges, user.EdgeFriend)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case user.EdgeFriend:
+		ids := make([]ent.Value, 0, len(m.removedfriend))
+		for id := range m.removedfriend {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedfriend {
+		edges = append(edges, user.EdgeFriend)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
+	switch name {
+	case user.EdgeFriend:
+		return m.clearedfriend
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
+	switch name {
+	case user.EdgeFriend:
+		m.ResetFriend()
+		return nil
+	}
 	return fmt.Errorf("unknown User edge %s", name)
 }

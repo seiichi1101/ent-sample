@@ -16,6 +16,27 @@ type User struct {
 	ID string `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges UserEdges `json:"edges"`
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// Friend holds the value of the friend edge.
+	Friend []*User `json:"friend,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// FriendOrErr returns the Friend value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) FriendOrErr() ([]*User, error) {
+	if e.loadedTypes[0] {
+		return e.Friend, nil
+	}
+	return nil, &NotLoadedError{edge: "friend"}
 }
 
 // FromResponse scans the gremlin response data into User.
@@ -34,6 +55,11 @@ func (u *User) FromResponse(res *gremlin.Response) error {
 	u.ID = scanu.ID
 	u.Name = scanu.Name
 	return nil
+}
+
+// QueryFriend queries the "friend" edge of the User entity.
+func (u *User) QueryFriend() *UserQuery {
+	return (&UserClient{config: u.config}).QueryFriend(u)
 }
 
 // Update returns a builder for updating this User.

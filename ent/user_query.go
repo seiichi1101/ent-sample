@@ -25,6 +25,8 @@ type UserQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.User
+	// eager-loading edges.
+	withFriend *UserQuery
 	// intermediate query (i.e. traversal path).
 	gremlin *dsl.Traversal
 	path    func(context.Context) (*dsl.Traversal, error)
@@ -59,6 +61,20 @@ func (uq *UserQuery) Unique(unique bool) *UserQuery {
 func (uq *UserQuery) Order(o ...OrderFunc) *UserQuery {
 	uq.order = append(uq.order, o...)
 	return uq
+}
+
+// QueryFriend chains the current query on the "friend" edge.
+func (uq *UserQuery) QueryFriend() *UserQuery {
+	query := &UserQuery{config: uq.config}
+	query.path = func(ctx context.Context) (fromU *dsl.Traversal, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		gremlin := uq.gremlinQuery(ctx)
+		fromU = gremlin.Both(user.FriendLabel)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first User entity from the query.
@@ -242,10 +258,22 @@ func (uq *UserQuery) Clone() *UserQuery {
 		offset:     uq.offset,
 		order:      append([]OrderFunc{}, uq.order...),
 		predicates: append([]predicate.User{}, uq.predicates...),
+		withFriend: uq.withFriend.Clone(),
 		// clone intermediate query.
 		gremlin: uq.gremlin.Clone(),
 		path:    uq.path,
 	}
+}
+
+// WithFriend tells the query-builder to eager-load the nodes that are connected to
+// the "friend" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithFriend(opts ...func(*UserQuery)) *UserQuery {
+	query := &UserQuery{config: uq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withFriend = query
+	return uq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.

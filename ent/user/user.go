@@ -9,6 +9,10 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// EdgeFriend holds the string denoting the friend edge name in mutations.
+	EdgeFriend = "friend"
+	// FriendLabel holds the string label denoting the friend edge type in the database.
+	FriendLabel = "user_friend"
 )
 
 var (
